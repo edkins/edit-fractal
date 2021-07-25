@@ -9,4 +9,5 @@ edition = "2018"
 crate-type = ["cdylib"]
 
 [dependencies]
+nom = "6.2.1"
 wasm-bindgen = "0.2.74"
