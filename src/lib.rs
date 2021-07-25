@@ -1,15 +1,16 @@
 use wasm_bindgen::prelude::*;
 
 mod ast;
+mod backend;
+mod module_builder;
 mod parse;
 
 #[wasm_bindgen]
 pub fn compile(text: &str) -> Box<[u8]> {
-    let vec = match parse::parse(text) {
-        Err(_) => vec![],
-        Ok(e) => {
-            format!("{:?}", e).as_bytes().to_vec()
+    match parse::parse(text) {
+        Err(e) => panic!("{:?}", e),
+        Ok(expr) => {
+            backend::backend(&expr).into_boxed_slice()
         }
-    };
-    vec.into_boxed_slice()
+    }
 }

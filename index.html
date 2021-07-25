@@ -8,10 +8,13 @@
 
 			async function run() {
 				await init();
-				document.getElementById('run_button').onclick = () => {
+				document.getElementById('run_button').onclick = async() => {
 					const text = document.getElementById('formula').value;
 					const program = compile(text);
 					console.log(program);
+					const mod = await WebAssembly.instantiate(program, {});
+					console.log(mod);
+					console.log(mod.instance.exports.return_thing());
 				};
 			}
 			run();

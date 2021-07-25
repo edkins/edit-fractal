@@ -1,15 +1,14 @@
+use crate::ast::Expr;
 use nom::{
-    Finish,
-    IResult,
     branch::alt,
     bytes::complete::tag,
     character::complete::{digit1, multispace0},
     combinator::{all_consuming, map, opt, recognize, value},
     multi::fold_many0,
     sequence::{preceded, terminated, tuple},
+    Finish, IResult,
 };
 use std::{cmp::Ordering, fmt};
-use crate::ast::Expr;
 
 pub fn parse(input: &str) -> Result<Expr, ParseErr> {
     Ok(all_consuming(preceded(whitespace, expr))(input)
@@ -22,13 +21,11 @@ fn expr(input: &str) -> IResult<&str, Expr, Err> {
     let (input, init) = expr_term(input)?;
     fold_many0(
         alt((
-                tuple((symbol_return("+"), expr_term)),
-                tuple((symbol_return("-"), expr_term)),
+            tuple((symbol_return("+"), expr_term)),
+            tuple((symbol_return("-"), expr_term)),
         )),
         init,
-        |lhs, (op, rhs)| {
-            Expr::Call(op.to_owned(), vec![lhs, rhs])
-        }
+        |lhs, (op, rhs)| Expr::Call(op.to_owned(), vec![lhs, rhs]),
     )(input)
 }
 
@@ -36,19 +33,20 @@ fn expr_term(input: &str) -> IResult<&str, Expr, Err> {
     let (input, init) = expr_tight(input)?;
     fold_many0(
         alt((
-                tuple((symbol_return("*"), expr_tight)),
-                tuple((symbol_return("/"), expr_tight)),
+            tuple((symbol_return("*"), expr_tight)),
+            tuple((symbol_return("/"), expr_tight)),
         )),
         init,
-        |lhs, (op, rhs)| {
-            Expr::Call(op.to_owned(), vec![lhs, rhs])
-        }
+        |lhs, (op, rhs)| Expr::Call(op.to_owned(), vec![lhs, rhs]),
     )(input)
 }
 
 fn expr_tight(input: &str) -> IResult<&str, Expr, Err> {
     map(
-        terminated(recognize(tuple((digit1, opt(tuple((tag("."), digit1)))))), whitespace),
+        terminated(
+            recognize(tuple((digit1, opt(tuple((tag("."), digit1)))))),
+            whitespace,
+        ),
         |s: &str| Expr::F32(s.parse().unwrap()),
     )(input)
 }
