@@ -20,6 +20,9 @@ impl ModuleBuilder {
                 }
                 match &f as &str {
                     "+" => self.f32_add(),
+                    "-" => self.f32_sub(),
+                    "*" => self.f32_mul(),
+                    "/" => self.f32_div(),
                     _ => panic!("Cannot call {}", f),
                 }
             }

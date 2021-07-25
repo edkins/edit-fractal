@@ -137,6 +137,15 @@ impl ModuleBuilder {
     pub fn f32_add(&mut self) {
         self.emit(&[0x92]);
     }
+    pub fn f32_sub(&mut self) {
+        self.emit(&[0x93]);
+    }
+    pub fn f32_mul(&mut self) {
+        self.emit(&[0x94]);
+    }
+    pub fn f32_div(&mut self) {
+        self.emit(&[0x95]);
+    }
 }
 
 fn extend_leb128_usize(v: &mut Vec<u8>, mut n: usize) {

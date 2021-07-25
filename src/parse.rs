@@ -5,7 +5,7 @@ use nom::{
     character::complete::{digit1, multispace0},
     combinator::{all_consuming, map, opt, recognize, value},
     multi::fold_many0,
-    sequence::{preceded, terminated, tuple},
+    sequence::{delimited, preceded, terminated, tuple},
     Finish, IResult,
 };
 use std::{cmp::Ordering, fmt};
@@ -42,6 +42,13 @@ fn expr_term(input: &str) -> IResult<&str, Expr, Err> {
 }
 
 fn expr_tight(input: &str) -> IResult<&str, Expr, Err> {
+    alt((
+        delimited(symbol("("), expr, symbol(")")),
+        expr_f32,
+    ))(input)
+}
+
+fn expr_f32(input: &str) -> IResult<&str, Expr, Err> {
     map(
         terminated(
             recognize(tuple((digit1, opt(tuple((tag("."), digit1)))))),
