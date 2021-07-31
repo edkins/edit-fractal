@@ -5,6 +5,8 @@ pub struct ModuleBuilder {
     code_blob: Vec<u8>,
     exports: Vec<(String, u8, usize)>,
     current_func_type: usize,
+    current_func_local_count: usize,
+    current_func_locals: Vec<u8>,
     current_func_code: Vec<u8>,
     in_func: bool,
 }
@@ -19,6 +21,10 @@ pub enum ValType {
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Func(usize);
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct Local(usize);
+
 
 impl ValType {
     fn as_byte(&self) -> u8 {
@@ -102,17 +108,15 @@ impl ModuleBuilder {
         }
         self.current_func_code.extend_from_slice(bytes);
     }
-    pub fn start_func(&mut self, args: &[ValType], ret: &[ValType], locals: &[ValType]) -> Func {
+    pub fn start_func(&mut self, args: &[ValType], ret: &[ValType]) -> Func {
         if self.in_func {
             panic!("start_func cannot be called while inside a func");
         }
         self.current_func_type = self.typ(args, ret);
+        self.current_func_locals.clear();
+        self.current_func_local_count = 0;
         self.current_func_code.clear();
         self.in_func = true;
-        extend_leb128_usize(&mut self.current_func_code, locals.len());
-        for local in locals {
-            self.current_func_code.push(local.as_byte());
-        }
         Func(self.funcs.len())
     }
     pub fn end_func(&mut self) {
@@ -121,12 +125,25 @@ impl ModuleBuilder {
         }
         self.emit(&[0x0b]);
 
-        extend_leb128_usize(&mut self.code_blob, self.current_func_code.len());
+        extend_leb128_usize(&mut self.code_blob, leb_usize_len(self.current_func_local_count) + self.current_func_locals.len() + self.current_func_code.len());
+        extend_leb128_usize(&mut self.code_blob, self.current_func_local_count);
+        self.code_blob.extend_from_slice(&self.current_func_locals);
         self.code_blob.extend_from_slice(&self.current_func_code);
         self.funcs.push(self.current_func_type);
         self.current_func_code.clear();
+        self.current_func_locals.clear();
         self.in_func = false;
     }
+    pub fn add_local(&mut self, typ: ValType) -> Local {
+        if !self.in_func {
+            panic!("add_local cannot be called outside of a func");
+        }
+        extend_leb128_usize(&mut self.current_func_locals, 1);
+        self.current_func_locals.push(typ.as_byte());
+        self.current_func_local_count += 1;
+        Local(self.current_func_local_count - 1)
+    }
+
     pub fn export_func(&mut self, f: Func, name: &str) {
         self.exports.push((name.to_owned(), 0x00, f.0));
     }
@@ -145,6 +162,22 @@ impl ModuleBuilder {
     }
     pub fn f32_div(&mut self) {
         self.emit(&[0x95]);
+    }
+    pub fn f64_const(&mut self, x: f64) {
+        self.emit(&[0x44]);
+        self.emit(&x.to_le_bytes());
+    }
+    pub fn f64_add(&mut self) {
+        self.emit(&[0xa0]);
+    }
+    pub fn f64_sub(&mut self) {
+        self.emit(&[0xa1]);
+    }
+    pub fn f64_mul(&mut self) {
+        self.emit(&[0xa2]);
+    }
+    pub fn f64_div(&mut self) {
+        self.emit(&[0xa3]);
     }
 }
 

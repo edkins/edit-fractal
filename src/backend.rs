@@ -3,7 +3,7 @@ use crate::module_builder::{ModuleBuilder,ValType};
 
 pub fn backend(expr: &Expr) -> Vec<u8> {
     let mut mb = ModuleBuilder::default();
-    let return_thing = mb.start_func(&[], &[ValType::F32], &[]);
+    let return_thing = mb.start_func(&[], &[ValType::F32]);
     mb.do_expr(expr);
     mb.end_func();
     mb.export_func(return_thing, "return_thing");
