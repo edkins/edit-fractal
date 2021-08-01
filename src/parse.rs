@@ -1,7 +1,7 @@
 use crate::ast::Expr;
 use nom::{
     branch::alt,
-    bytes::complete::tag,
+    bytes::complete::{tag, take_while1},
     character::complete::{digit1, multispace0},
     combinator::{all_consuming, map, opt, recognize, value},
     multi::fold_many0,
@@ -45,6 +45,7 @@ fn expr_tight(input: &str) -> IResult<&str, Expr, Err> {
     alt((
         delimited(symbol("("), expr, symbol(")")),
         expr_f32,
+        expr_var,
     ))(input)
 }
 
@@ -54,8 +55,12 @@ fn expr_f32(input: &str) -> IResult<&str, Expr, Err> {
             recognize(tuple((digit1, opt(tuple((tag("."), digit1)))))),
             whitespace,
         ),
-        |s: &str| Expr::F32(s.parse().unwrap()),
+        |s: &str| Expr::F64(s.parse().unwrap()),
     )(input)
+}
+
+fn expr_var(input: &str) -> IResult<&str, Expr, Err> {
+    map(word_owned, Expr::Var)(input)
 }
 
 fn symbol_return<'a, 'b: 'a>(sym: &'b str) -> impl Fn(&'a str) -> IResult<&'a str, &'a str, Err> {
@@ -78,6 +83,17 @@ fn tagv<'a, 'b: 'a>(t: &'b str) -> impl Fn(&'a str) -> IResult<&'a str, (), Err>
 
 fn whitespace(input: &str) -> IResult<&str, (), Err> {
     value((), multispace0)(input)
+}
+
+fn word(input: &str) -> IResult<&str, &str, Err> {
+    terminated(
+        take_while1(|c: char| c.is_ascii_alphanumeric() || c == '_'),
+        whitespace,
+    )(input)
+}
+
+fn word_owned(input: &str) -> IResult<&str, String, Err> {
+    map(word, str::to_owned)(input).map_err(|e| decorate(e, "word"))
 }
 
 //////////////

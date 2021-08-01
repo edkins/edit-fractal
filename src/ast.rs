@@ -1,5 +1,6 @@
 #[derive(Debug, Clone)]
 pub enum Expr {
-    F32(f32),
+    F64(f64),
+    Var(String),
     Call(String, Vec<Expr>),
 }

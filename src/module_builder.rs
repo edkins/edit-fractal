@@ -22,7 +22,7 @@ pub enum ValType {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Func(usize);
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct Local(usize);
 
 
@@ -108,6 +108,12 @@ impl ModuleBuilder {
         }
         self.current_func_code.extend_from_slice(bytes);
     }
+    fn emit_leb128_usize(&mut self, n: usize) {
+        if !self.in_func {
+            panic!("cannot emit code outside of a func");
+        }
+        extend_leb128_usize(&mut self.current_func_code, n);
+    }
     pub fn start_func(&mut self, args: &[ValType], ret: &[ValType]) -> Func {
         if self.in_func {
             panic!("start_func cannot be called while inside a func");
@@ -167,6 +173,9 @@ impl ModuleBuilder {
         self.emit(&[0x44]);
         self.emit(&x.to_le_bytes());
     }
+    pub fn f64_neg(&mut self) {
+        self.emit(&[0x9a]);
+    }
     pub fn f64_add(&mut self) {
         self.emit(&[0xa0]);
     }
@@ -178,6 +187,34 @@ impl ModuleBuilder {
     }
     pub fn f64_div(&mut self) {
         self.emit(&[0xa3]);
+    }
+    pub fn local_get(&mut self, local: Local) {
+        self.emit(&[0x20]);
+        self.emit_leb128_usize(local.0);
+    }
+    pub fn local_set(&mut self, local: Local) {
+        self.emit(&[0x21]);
+        self.emit_leb128_usize(local.0);
+    }
+    pub fn local_tee(&mut self, local: Local) {
+        self.emit(&[0x22]);
+        self.emit_leb128_usize(local.0);
+    }
+    pub fn br_if(&mut self, label: usize) {
+        self.emit(&[0x0d]);
+        self.emit_leb128_usize(label);
+    }
+    pub fn start_loop(&mut self) {
+        self.emit(&[0x03]);
+    }
+    pub fn end_loop(&mut self) {
+        self.emit(&[0x0b]);
+    }
+    pub fn start_block(&mut self) {
+        self.emit(&[0x02]);
+    }
+    pub fn end_block(&mut self) {
+        self.emit(&[0x0b]);
     }
 }
 
@@ -193,6 +230,7 @@ fn leb_usize_len(mut n: usize) -> usize {
     let mut len = 1;
     while n >= 128 {
         len += 1;
+        n >>= 7;
     }
     len
 }

@@ -2,6 +2,7 @@ use wasm_bindgen::prelude::*;
 
 mod ast;
 mod backend;
+mod dag;
 mod module_builder;
 mod parse;
 
