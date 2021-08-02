@@ -13,14 +13,16 @@ pub fn backend(expr: &Expr) -> Vec<u8> {
             Expr::F64(4.0)]);
 
     let mut mb = ModuleBuilder::default();
-    let return_thing = mb.start_func(&[], &[ValType::F64]);
+    let return_thing = mb.start_func(&[ValType::F64, ValType::F64], &[ValType::F64]);
 
+    let cx = mb.get_local_param(0);
+    let cy = mb.get_local_param(1);
     let l0 = mb.add_local(ValType::F64);
     let l1 = mb.add_local(ValType::F64);
     let iter = mb.add_local(ValType::F64);
-    mb.f64_const(0.75);
+    mb.f64_const(0.0);
     mb.local_set(l0);
-    mb.f64_const(0.75);
+    mb.f64_const(0.0);
     mb.local_set(l1);
     mb.f64_const(0.0);
     mb.local_set(iter);
@@ -29,6 +31,7 @@ pub fn backend(expr: &Expr) -> Vec<u8> {
     mb.start_loop(BlockType::Empty);
 
     let mut fc = FuncContext::new(mb);
+    fc.env.insert("c".to_owned(), Structure::Complex(fc.dag.f64_input(cx), fc.dag.f64_input(cy)));
     fc.env.insert("z".to_owned(), Structure::Complex(fc.dag.f64_input(l0), fc.dag.f64_input(l1)));
     fc.env.insert("iter".to_owned(), Structure::Complex(fc.dag.f64_input(iter), fc.dag.f64_zero()));
     let escape1 = fc.do_expr(&expr_escape1);

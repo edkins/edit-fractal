@@ -5,6 +5,7 @@ pub struct ModuleBuilder {
     code_blob: Vec<u8>,
     exports: Vec<(String, u8, usize)>,
     current_func_type: usize,
+    current_func_param_count: usize,
     current_func_local_count: usize,
     current_func_locals: Vec<u8>,
     current_func_code: Vec<u8>,
@@ -130,6 +131,7 @@ impl ModuleBuilder {
         }
         self.current_func_type = self.typ(args, ret);
         self.current_func_locals.clear();
+        self.current_func_param_count = args.len();
         self.current_func_local_count = 0;
         self.current_func_code.clear();
         self.in_func = true;
@@ -150,6 +152,17 @@ impl ModuleBuilder {
         self.current_func_locals.clear();
         self.in_func = false;
     }
+
+    pub fn get_local_param(&self, index: usize) -> Local {
+        if !self.in_func {
+            panic!("get_local_param cannot be called outside of a func");
+        }
+        if index >= self.current_func_param_count {
+            panic!("get_local_param index out of range");
+        }
+        Local(index)
+    }
+
     pub fn add_local(&mut self, typ: ValType) -> Local {
         if !self.in_func {
             panic!("add_local cannot be called outside of a func");
@@ -157,7 +170,7 @@ impl ModuleBuilder {
         extend_leb128_usize(&mut self.current_func_locals, 1);
         self.current_func_locals.push(typ.as_byte());
         self.current_func_local_count += 1;
-        Local(self.current_func_local_count - 1)
+        Local(self.current_func_param_count + self.current_func_local_count - 1)
     }
 
     pub fn export_func(&mut self, f: Func, name: &str) {

@@ -10,11 +10,21 @@
 				await init();
 				document.getElementById('run_button').onclick = async() => {
 					const text = document.getElementById('formula').value;
+					const ctx = document.getElementById('canvas').getContext('2d');
 					const program = compile(text);
 					console.log(program);
 					const mod = await WebAssembly.instantiate(program, {});
 					console.log(mod);
-					console.log(mod.instance.exports.return_thing());
+					for (let y = 0; y < 100; y++) {
+						for (let x = 0; x < 100; x++) {
+							let cx = (x - 50) / 25;
+							let cy = (y - 50) / 25;
+							let value = mod.instance.exports.return_thing(cx, cy);
+							ctx.fillStyle = (value > 100) ? '#fff' : '#000';
+							ctx.fillRect(x, y, 1, 1);
+						}
+						await new Promise((resolve,reject) => setTimeout(resolve, 0));
+					}
 				};
 			}
 			run();
@@ -24,6 +34,9 @@
 		</div>
 		<div>
 			<input type="button" id="run_button" value="Run">
+		</div>
+		<div>
+			<canvas id="canvas" width="100" height="100"></canvas>
 		</div>
 	</body>
 </html>
