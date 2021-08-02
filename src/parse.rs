@@ -57,6 +57,8 @@ fn expr_term(input: &str) -> IResult<&str, Expr, Err> {
 fn expr_tight(input: &str) -> IResult<&str, Expr, Err> {
     alt((
         delimited(symbol("("), expr, symbol(")")),
+        map(preceded(keyword("sqabs"), delimited(symbol("("), expr, symbol(")"))), |e|Expr::Call("sqabs".to_owned(), vec![e])),
+        map(preceded(keyword("real"), delimited(symbol("("), expr, symbol(")"))), |e|Expr::Call("real".to_owned(), vec![e])),
         expr_f32,
         expr_var,
     ))(input)
@@ -87,6 +89,20 @@ fn symbol<'a, 'b: 'a>(sym: &'b str) -> impl Fn(&'a str) -> IResult<&'a str, (), 
     move |input| {
         terminated(tagv(sym), whitespace)(input)
             .map_err(|e| decorate(e, format!("Expected: {:?}", sym)))
+    }
+}
+
+fn keyword<'a, 'b: 'a>(kw: &'b str) -> impl Fn(&'a str) -> IResult<&'a str, (), Err> {
+    move |input| {
+        let (input2, w) = word(input).map_err(|e| decorate(e, format!("Expected '{}'", kw)))?;
+        if w == kw {
+            Ok((input2, ()))
+        } else {
+            Err(nom::Err::Error(Err {
+                remaining: input.len(), // "peek" semantics - error gives location at the start of the keyword
+                message: format!("Expected '{}'", kw),
+            }))
+        }
     }
 }
 

@@ -3,14 +3,9 @@ use crate::ast::Expr;
 use crate::dag::{Dag, DagNode, Effect, EffectType};
 use crate::module_builder::{BlockType,ModuleBuilder,ValType};
 
-pub fn backend(expr_initz: &Expr, expr: &Expr) -> Vec<u8> {
+pub fn backend(expr_initz: &Expr, expr: &Expr, expr_escape2: &Expr, maxiter: &Expr) -> Vec<u8> {
     let expr_iter = Expr::Call("+".to_owned(), vec![Expr::Var("iter".to_owned()), Expr::F64(1.0)]);
-    let expr_escape1 = Expr::Call(">".to_owned(), vec![Expr::Var("iter".to_owned()), Expr::F64(100.0)]);
-    let expr_escape2 = Expr::Call(
-        ">".to_owned(),
-        vec![
-            Expr::Call("sqabs".to_owned(), vec![Expr::Var("z".to_owned())]),
-            Expr::F64(4.0)]);
+    let expr_escape1 = Expr::Call(">".to_owned(), vec![Expr::Var("iter".to_owned()), maxiter.clone()]);
 
     let mut mb = ModuleBuilder::default();
     let return_thing = mb.start_func(&[ValType::F64, ValType::F64], &[ValType::F64]);

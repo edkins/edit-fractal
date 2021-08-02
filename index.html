@@ -9,7 +9,7 @@
 			let center_x = 0;
 			let center_y = 0;
 			let zoom = 4;
-			const size = 400;
+			let size = 400;
 
 			let func_text = undefined;
 			let func = undefined;
@@ -21,10 +21,21 @@
 				await run();
 			}
 
+			async function toggle_big() {
+				if (size === 400) {
+					size = 2000;
+				} else {
+					size = 400;
+				}
+				await run();
+			}
+
 			async function run() {
 				const text = [
 					document.getElementById('initial_z').value,
-					document.getElementById('iteration').value
+					document.getElementById('iteration').value,
+					document.getElementById('escape').value,
+					document.getElementById('maxiter').value
 				];
 				if (text !== func_text) {
 					func_text = text;
@@ -34,7 +45,10 @@
 					console.log(mod);
 					func = mod.instance.exports.return_thing;
 				}
-				const ctx = document.getElementById('canvas').getContext('2d');
+				const canvas = document.getElementById('canvas');
+				canvas.width = size;
+				canvas.height = size;
+				const ctx = canvas.getContext('2d');
 				const image_data = ctx.createImageData(size, 1);
 				const data = image_data.data;
 				ctx.fillStyle = '#888';
@@ -44,17 +58,10 @@
 						const cx = (x / size - 0.5) * zoom + center_x;
 						const cy = (y / size - 0.5) * zoom + center_y;
 						const value = func(cx, cy);
-						if (value > 100) {
-							data[4*x] = 255;
-							data[4*x+1] = 255;
-							data[4*x+2] = 255;
-							data[4*x+3] = 255;
-						} else {
-							data[4*x] = value;
-							data[4*x+1] = value;
-							data[4*x+2] = value;
-							data[4*x+3] = 255;
-						}
+						data[4*x] = 128 - 128 * Math.cos(Math.pow(value, 0.4));
+						data[4*x+1] = 128 - 128 * Math.cos(Math.pow(value, 0.5));
+						data[4*x+2] = 128 - 128 * Math.cos(Math.pow(value, 0.6));
+						data[4*x+3] = 255;
 					}
 					ctx.putImageData(image_data, 0, y);
 					if (y % 16 === 0) {
@@ -78,19 +85,27 @@
 				await init();
 				document.getElementById('reset_zoom_button').onclick = reset_zoom;
 				document.getElementById('run_button').onclick = run;
+				document.getElementById('big_button').onclick = toggle_big;
 				document.getElementById('canvas').onclick = canvas_click;
 			}
 			setup();
 		</script>
 		<div>
-		<input type="text" id="initial_z" autocomplete="off" value="0"> initial z
+			<input type="text" id="initial_z" autocomplete="off" value="0"> initial z
 		</div>
 		<div>
-		<input type="text" id="iteration" autocomplete="off" value="z * z + c"> iteration
+			<input type="text" id="iteration" autocomplete="off" value="z * z + c"> iteration
+		</div>
+		<div>
+			<input type="text" id="escape" autocomplete="off" value="sqabs(z) > 4"> escape
+		</div>
+		<div>
+			<input type="text" id="maxiter" autocomplete="off" value="100"> max iter
 		</div>
 		<div>
 			<input type="button" id="run_button" value="Run">
 			<input type="button" id="reset_zoom_button" value="Reset zoom">
+			<input type="button" id="big_button" value="Big">
 		</div>
 		<div>
 			<canvas id="canvas" width="400" height="400"></canvas>
