@@ -153,7 +153,7 @@ impl ModuleBuilder {
     pub fn export_func(&mut self, f: Func, name: &str) {
         self.exports.push((name.to_owned(), 0x00, f.0));
     }
-    pub fn f32_const(&mut self, x: f32) {
+    /*pub fn f32_const(&mut self, x: f32) {
         self.emit(&[0x43]);
         self.emit(&x.to_le_bytes());
     }
@@ -168,7 +168,7 @@ impl ModuleBuilder {
     }
     pub fn f32_div(&mut self) {
         self.emit(&[0x95]);
-    }
+    }*/
     pub fn f64_const(&mut self, x: f64) {
         self.emit(&[0x44]);
         self.emit(&x.to_le_bytes());
@@ -187,6 +187,18 @@ impl ModuleBuilder {
     }
     pub fn f64_div(&mut self) {
         self.emit(&[0xa3]);
+    }
+    pub fn f64_lt(&mut self) {
+        self.emit(&[0x63]);
+    }
+    pub fn f64_gt(&mut self) {
+        self.emit(&[0x64]);
+    }
+    pub fn f64_le(&mut self) {
+        self.emit(&[0x65]);
+    }
+    pub fn f64_ge(&mut self) {
+        self.emit(&[0x66]);
     }
     pub fn local_get(&mut self, local: Local) {
         self.emit(&[0x20]);

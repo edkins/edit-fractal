@@ -29,6 +29,7 @@ pub fn backend(expr: &Expr) -> Vec<u8> {
 
 #[derive(Clone)]
 enum Structure {
+    Bool(DagNode),
     Complex(DagNode, DagNode),
 }
 
@@ -41,13 +42,21 @@ struct FuncContext {
 impl Structure {
     fn cx(&self) -> DagNode {
         match self {
-            Structure::Complex(x, _) => *x
+            Structure::Complex(x, _) => *x,
+            Structure::Bool(_) => panic!(),
         }
     }
     fn cy(&self) -> DagNode {
         match self {
-            Structure::Complex(_, y) => *y
+            Structure::Complex(_, y) => *y,
+            Structure::Bool(_) => panic!(),
         }
+    }
+    fn as_real_f64(&self) -> DagNode {
+        if !self.cy().is_const_zero() {
+            panic!();
+        }
+        self.cx()
     }
 }
 
@@ -91,7 +100,17 @@ impl FuncContext {
                         let y = self.dag.f64_add(x0_y1, x1_y0);
                         Structure::Complex(x, y)
                     }
+                    "sqabs" => {
+                        let xx = self.dag.f64_mul(structs[0].cx(), structs[0].cx());
+                        let yy = self.dag.f64_mul(structs[0].cy(), structs[0].cy());
+                        let rr = self.dag.f64_add(xx, yy);
+                        Structure::Complex(rr, self.dag.f64_zero())
+                    }
                     "/" => panic!("Division not implemented yet"),
+                    "<" => Structure::Bool(self.dag.f64_lt(structs[0].as_real_f64(), structs[1].as_real_f64())),
+                    ">" => Structure::Bool(self.dag.f64_gt(structs[0].as_real_f64(), structs[1].as_real_f64())),
+                    "<=" => Structure::Bool(self.dag.f64_le(structs[0].as_real_f64(), structs[1].as_real_f64())),
+                    ">=" => Structure::Bool(self.dag.f64_ge(structs[0].as_real_f64(), structs[1].as_real_f64())),
                     _ => panic!("Cannot call {}", f),
                 }
             }

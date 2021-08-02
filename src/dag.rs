@@ -15,6 +15,10 @@ enum DagCalc {
     F64Sub(DagNode, DagNode),
     F64Mul(DagNode, DagNode),
     F64Div(DagNode, DagNode),
+    F64Lt(DagNode, DagNode),
+    F64Gt(DagNode, DagNode),
+    F64Le(DagNode, DagNode),
+    F64Ge(DagNode, DagNode),
 }
 
 #[derive(Default)]
@@ -43,13 +47,14 @@ impl DagCalc {
     fn dependencies(&self) -> Vec<DagNode> {
         match self {
             DagCalc::F64Neg(x) => vec![*x],
-            DagCalc::F64Add(x,y) | DagCalc::F64Sub(x,y) | DagCalc::F64Mul(x,y) | DagCalc::F64Div(x,y) => vec![*x,*y],
+            DagCalc::F64Add(x,y) | DagCalc::F64Sub(x,y) | DagCalc::F64Mul(x,y) | DagCalc::F64Div(x,y)
+                | DagCalc::F64Lt(x,y) | DagCalc::F64Gt(x,y) | DagCalc::F64Le(x,y) | DagCalc::F64Ge(x,y) => vec![*x,*y],
         }
     }
 }
 
 impl DagNode {
-    fn is_const_zero(self) -> bool {
+    pub fn is_const_zero(self) -> bool {
         match self {
             DagNode::F64(x) => f64::from_bits(x) == 0.0,
             _ => false,
@@ -65,6 +70,10 @@ impl DagNode {
 }
 
 impl Dag {
+    pub fn f64_zero(&self) -> DagNode {
+        self.f64_const(0.0)
+    }
+
     pub fn f64_const(&self, x: f64) -> DagNode {
         DagNode::F64(x.to_bits())
     }
@@ -142,6 +151,22 @@ impl Dag {
         }
     }
 
+    pub fn f64_lt(&mut self, x: DagNode, y: DagNode) -> DagNode {
+        self.calc(DagCalc::F64Lt(x, y))
+    }
+
+    pub fn f64_gt(&mut self, x: DagNode, y: DagNode) -> DagNode {
+        self.calc(DagCalc::F64Gt(x, y))
+    }
+
+    pub fn f64_le(&mut self, x: DagNode, y: DagNode) -> DagNode {
+        self.calc(DagCalc::F64Le(x, y))
+    }
+
+    pub fn f64_ge(&mut self, x: DagNode, y: DagNode) -> DagNode {
+        self.calc(DagCalc::F64Ge(x, y))
+    }
+
     fn calc(&mut self, calc: DagCalc) -> DagNode {
         if let Some(n) = self.memo.get(&calc) {
             return *n;
@@ -186,34 +211,64 @@ impl Dag {
                 DagNode::F64(x) => mb.f64_const(f64::from_bits(x)),
                 DagNode::Input(local) => mb.local_get(local),
                 DagNode::Node(i) => {
+                    let typ;
                     match self.nodes[i] {
                         DagCalc::F64Neg(x) => {
                             self.emit_recursive(mb, placement, usage, x);
+                            typ = ValType::F64;
                         }
                         DagCalc::F64Add(x,y) => {
                             self.emit_recursive(mb, placement, usage, x);
                             self.emit_recursive(mb, placement, usage, y);
                             mb.f64_add();
+                            typ = ValType::F64;
                         }
                         DagCalc::F64Sub(x,y) => {
                             self.emit_recursive(mb, placement, usage, x);
                             self.emit_recursive(mb, placement, usage, y);
                             mb.f64_sub();
+                            typ = ValType::F64;
                         }
                         DagCalc::F64Mul(x,y) => {
                             self.emit_recursive(mb, placement, usage, x);
                             self.emit_recursive(mb, placement, usage, y);
                             mb.f64_mul();
+                            typ = ValType::F64;
                         }
                         DagCalc::F64Div(x,y) => {
                             self.emit_recursive(mb, placement, usage, x);
                             self.emit_recursive(mb, placement, usage, y);
                             mb.f64_div();
+                            typ = ValType::F64;
+                        }
+                        DagCalc::F64Lt(x,y) => {
+                            self.emit_recursive(mb, placement, usage, x);
+                            self.emit_recursive(mb, placement, usage, y);
+                            mb.f64_lt();
+                            typ = ValType::I32;
+                        }
+                        DagCalc::F64Gt(x,y) => {
+                            self.emit_recursive(mb, placement, usage, x);
+                            self.emit_recursive(mb, placement, usage, y);
+                            mb.f64_gt();
+                            typ = ValType::I32;
+                        }
+                        DagCalc::F64Le(x,y) => {
+                            self.emit_recursive(mb, placement, usage, x);
+                            self.emit_recursive(mb, placement, usage, y);
+                            mb.f64_le();
+                            typ = ValType::I32;
+                        }
+                        DagCalc::F64Ge(x,y) => {
+                            self.emit_recursive(mb, placement, usage, x);
+                            self.emit_recursive(mb, placement, usage, y);
+                            mb.f64_ge();
+                            typ = ValType::I32;
                         }
                     }
                     if let Some(x) = usage.get(&node) {
                         if *x > 1 {
-                            let local = mb.add_local(ValType::F64);
+                            let local = mb.add_local(typ);
                             mb.local_tee(local);
                             placement.insert(node, local);
                         }

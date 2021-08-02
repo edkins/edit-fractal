@@ -3,7 +3,7 @@ use nom::{
     branch::alt,
     bytes::complete::{tag, take_while1},
     character::complete::{digit1, multispace0},
-    combinator::{all_consuming, map, opt, recognize, value},
+    combinator::{all_consuming, map, opt, recognize, success, value},
     multi::fold_many0,
     sequence::{delimited, preceded, terminated, tuple},
     Finish, IResult,
@@ -18,6 +18,19 @@ pub fn parse(input: &str) -> Result<Expr, ParseErr> {
 }
 
 fn expr(input: &str) -> IResult<&str, Expr, Err> {
+    let (input, lhs) = expr_add(input)?;
+    let x = alt((
+        map(preceded(symbol("<"), expr_add), |rhs|Expr::Call("<".to_owned(), vec![lhs.clone(), rhs])),
+        map(preceded(symbol(">"), expr_add), |rhs|Expr::Call(">".to_owned(), vec![lhs.clone(), rhs])),
+        map(preceded(symbol("<="), expr_add), |rhs|Expr::Call("<=".to_owned(), vec![lhs.clone(), rhs])),
+        map(preceded(symbol(">="), expr_add), |rhs|Expr::Call(">=".to_owned(), vec![lhs.clone(), rhs])),
+        success(lhs.clone())
+    ))(input);
+    drop(lhs);
+    x
+}
+
+fn expr_add(input: &str) -> IResult<&str, Expr, Err> {
     let (input, init) = expr_term(input)?;
     fold_many0(
         alt((
