@@ -3,7 +3,7 @@ use crate::ast::Expr;
 use crate::dag::{Dag, DagNode, Effect, EffectType};
 use crate::module_builder::{BlockType,ModuleBuilder,ValType};
 
-pub fn backend(expr: &Expr) -> Vec<u8> {
+pub fn backend(expr_initz: &Expr, expr: &Expr) -> Vec<u8> {
     let expr_iter = Expr::Call("+".to_owned(), vec![Expr::Var("iter".to_owned()), Expr::F64(1.0)]);
     let expr_escape1 = Expr::Call(">".to_owned(), vec![Expr::Var("iter".to_owned()), Expr::F64(100.0)]);
     let expr_escape2 = Expr::Call(
@@ -20,10 +20,13 @@ pub fn backend(expr: &Expr) -> Vec<u8> {
     let l0 = mb.add_local(ValType::F64);
     let l1 = mb.add_local(ValType::F64);
     let iter = mb.add_local(ValType::F64);
-    mb.f64_const(0.0);
-    mb.local_set(l0);
-    mb.f64_const(0.0);
+    let mut fc = FuncContext::new(mb);
+    fc.env.insert("c".to_owned(), Structure::Complex(fc.dag.f64_input(cx), fc.dag.f64_input(cy)));
+    let initz = fc.do_expr(expr_initz);
+    let mut mb = fc.done(&[Effect(EffectType::Push, initz.cx()), Effect(EffectType::Push, initz.cy())]);
     mb.local_set(l1);
+    mb.local_set(l0);
+
     mb.f64_const(0.0);
     mb.local_set(iter);
 

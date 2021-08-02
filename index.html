@@ -22,7 +22,10 @@
 			}
 
 			async function run() {
-				const text = document.getElementById('formula').value;
+				const text = [
+					document.getElementById('initial_z').value,
+					document.getElementById('iteration').value
+				];
 				if (text !== func_text) {
 					func_text = text;
 					const program = compile(text);
@@ -80,7 +83,10 @@
 			setup();
 		</script>
 		<div>
-		<input type="text" id="formula">
+		<input type="text" id="initial_z" autocomplete="off" value="0"> initial z
+		</div>
+		<div>
+		<input type="text" id="iteration" autocomplete="off" value="z * z + c"> iteration
 		</div>
 		<div>
 			<input type="button" id="run_button" value="Run">

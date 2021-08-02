@@ -7,11 +7,7 @@ mod module_builder;
 mod parse;
 
 #[wasm_bindgen]
-pub fn compile(text: &str) -> Box<[u8]> {
-    match parse::parse(text) {
-        Err(e) => panic!("{:?}", e),
-        Ok(expr) => {
-            backend::backend(&expr).into_boxed_slice()
-        }
-    }
+pub fn compile(texts: Box<[JsValue]>) -> Box<[u8]> {
+    let exprs:Vec<_> = texts.iter().map(|text|parse::parse(&text.as_string().unwrap()).unwrap()).collect();
+    backend::backend(&exprs[0], &exprs[1]).into_boxed_slice()
 }
