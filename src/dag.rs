@@ -215,6 +215,7 @@ impl Dag {
                     match self.nodes[i] {
                         DagCalc::F64Neg(x) => {
                             self.emit_recursive(mb, placement, usage, x);
+                            mb.f64_neg();
                             typ = ValType::F64;
                         }
                         DagCalc::F64Add(x,y) => {

@@ -135,6 +135,20 @@ impl FuncContext {
                         let y = self.dag.f64_add(x0_y1, x1_y0);
                         Structure::Complex(x, y)
                     }
+                    "/" => {
+                        let ac = self.dag.f64_mul(structs[0].cx(), structs[1].cx());
+                        let bd = self.dag.f64_mul(structs[0].cy(), structs[1].cy());
+                        let bc = self.dag.f64_mul(structs[0].cy(), structs[1].cx());
+                        let ad = self.dag.f64_mul(structs[0].cx(), structs[1].cy());
+                        let cc = self.dag.f64_mul(structs[1].cx(), structs[1].cx());
+                        let dd = self.dag.f64_mul(structs[1].cy(), structs[1].cy());
+                        let rr = self.dag.f64_add(cc, dd);
+                        let xrr = self.dag.f64_add(ac, bd);
+                        let yrr = self.dag.f64_sub(bc, ad);
+                        let x = self.dag.f64_div(xrr, rr);
+                        let y = self.dag.f64_div(yrr, rr);
+                        Structure::Complex(x, y)
+                    }
                     "sqabs" => {
                         let xx = self.dag.f64_mul(structs[0].cx(), structs[0].cx());
                         let yy = self.dag.f64_mul(structs[0].cy(), structs[0].cy());
@@ -144,7 +158,10 @@ impl FuncContext {
                     "real" => {
                         Structure::Complex(structs[0].cx(), self.dag.f64_zero())
                     }
-                    "/" => panic!("Division not implemented yet"),
+                    "conj" => {
+                        let y = self.dag.f64_neg(structs[0].cy());
+                        Structure::Complex(structs[0].cx(), y)
+                    }
                     "<" => Structure::Bool(self.dag.f64_lt(structs[0].as_real_f64(), structs[1].as_real_f64())),
                     ">" => Structure::Bool(self.dag.f64_gt(structs[0].as_real_f64(), structs[1].as_real_f64())),
                     "<=" => Structure::Bool(self.dag.f64_le(structs[0].as_real_f64(), structs[1].as_real_f64())),
