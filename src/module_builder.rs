@@ -20,6 +20,11 @@ pub enum ValType {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum BlockType {
+    Empty,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Func(usize);
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
@@ -113,6 +118,11 @@ impl ModuleBuilder {
             panic!("cannot emit code outside of a func");
         }
         extend_leb128_usize(&mut self.current_func_code, n);
+    }
+    fn emit_blocktype(&mut self, blocktype: BlockType) {
+        match blocktype {
+            BlockType::Empty => self.emit(&[0x40])
+        }
     }
     pub fn start_func(&mut self, args: &[ValType], ret: &[ValType]) -> Func {
         if self.in_func {
@@ -212,18 +222,24 @@ impl ModuleBuilder {
         self.emit(&[0x22]);
         self.emit_leb128_usize(local.0);
     }
+    pub fn br(&mut self, label: usize) {
+        self.emit(&[0x0c]);
+        self.emit_leb128_usize(label);
+    }
     pub fn br_if(&mut self, label: usize) {
         self.emit(&[0x0d]);
         self.emit_leb128_usize(label);
     }
-    pub fn start_loop(&mut self) {
+    pub fn start_loop(&mut self, blocktype: BlockType) {
         self.emit(&[0x03]);
+        self.emit_blocktype(blocktype);
     }
     pub fn end_loop(&mut self) {
         self.emit(&[0x0b]);
     }
-    pub fn start_block(&mut self) {
+    pub fn start_block(&mut self, blocktype: BlockType) {
         self.emit(&[0x02]);
+        self.emit_blocktype(blocktype);
     }
     pub fn end_block(&mut self) {
         self.emit(&[0x0b]);

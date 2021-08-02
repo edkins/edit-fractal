@@ -1,26 +1,54 @@
 use std::collections::HashMap;
 use crate::ast::Expr;
 use crate::dag::{Dag, DagNode, Effect, EffectType};
-use crate::module_builder::{ModuleBuilder,ValType};
+use crate::module_builder::{BlockType,ModuleBuilder,ValType};
 
 pub fn backend(expr: &Expr) -> Vec<u8> {
+    let expr_iter = Expr::Call("+".to_owned(), vec![Expr::Var("iter".to_owned()), Expr::F64(1.0)]);
+    let expr_escape1 = Expr::Call(">".to_owned(), vec![Expr::Var("iter".to_owned()), Expr::F64(100.0)]);
+    let expr_escape2 = Expr::Call(
+        ">".to_owned(),
+        vec![
+            Expr::Call("sqabs".to_owned(), vec![Expr::Var("z".to_owned())]),
+            Expr::F64(4.0)]);
+
     let mut mb = ModuleBuilder::default();
     let return_thing = mb.start_func(&[], &[ValType::F64]);
 
     let l0 = mb.add_local(ValType::F64);
     let l1 = mb.add_local(ValType::F64);
-    mb.f64_const(420.0);
+    let iter = mb.add_local(ValType::F64);
+    mb.f64_const(0.75);
     mb.local_set(l0);
-    mb.f64_const(421.0);
+    mb.f64_const(0.75);
     mb.local_set(l1);
+    mb.f64_const(0.0);
+    mb.local_set(iter);
+
+    mb.start_block(BlockType::Empty);
+    mb.start_loop(BlockType::Empty);
 
     let mut fc = FuncContext::new(mb);
     fc.env.insert("z".to_owned(), Structure::Complex(fc.dag.f64_input(l0), fc.dag.f64_input(l1)));
+    fc.env.insert("iter".to_owned(), Structure::Complex(fc.dag.f64_input(iter), fc.dag.f64_zero()));
+    let escape1 = fc.do_expr(&expr_escape1);
+    let escape2 = fc.do_expr(&expr_escape2);
     let newz = fc.do_expr(expr);
-    let mut mb = fc.done(&[Effect(EffectType::Push, newz.cx()), Effect(EffectType::Push, newz.cy())]);
+    let newiter = fc.do_expr(&expr_iter);
+    let mut mb = fc.done(&[
+                         Effect(EffectType::BrIf(1), escape1.boolean()),
+                         Effect(EffectType::BrIf(1), escape2.boolean()),
+                         Effect(EffectType::Push, newz.cx()),
+                         Effect(EffectType::Push, newz.cy()),
+                         Effect(EffectType::Push, newiter.as_real_f64())]);
+    mb.local_set(iter);
     mb.local_set(l1);
     mb.local_set(l0);
-    mb.f64_const(42.0);
+
+    mb.br(0);
+    mb.end_loop();
+    mb.end_block();
+    mb.local_get(iter);
 
     mb.end_func();
     mb.export_func(return_thing, "return_thing");
@@ -57,6 +85,12 @@ impl Structure {
             panic!();
         }
         self.cx()
+    }
+    fn boolean(&self) -> DagNode {
+        match self {
+            Structure::Bool(b) => *b,
+            Structure::Complex(_, _) => panic!(),
+        }
     }
 }
 
@@ -105,6 +139,9 @@ impl FuncContext {
                         let yy = self.dag.f64_mul(structs[0].cy(), structs[0].cy());
                         let rr = self.dag.f64_add(xx, yy);
                         Structure::Complex(rr, self.dag.f64_zero())
+                    }
+                    "real" => {
+                        Structure::Complex(structs[0].cx(), self.dag.f64_zero())
                     }
                     "/" => panic!("Division not implemented yet"),
                     "<" => Structure::Bool(self.dag.f64_lt(structs[0].as_real_f64(), structs[1].as_real_f64())),
