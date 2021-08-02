@@ -6,24 +6,45 @@
 		<script type="module">
 			import init, {compile} from './pkg/edit_fractal.js';
 
+			let center_x = 0;
+			let center_y = 0;
+			let zoom = 4;
+
 			async function run() {
 				await init();
 				document.getElementById('run_button').onclick = async() => {
+					const size = 400;
 					const text = document.getElementById('formula').value;
 					const ctx = document.getElementById('canvas').getContext('2d');
 					const program = compile(text);
 					console.log(program);
 					const mod = await WebAssembly.instantiate(program, {});
 					console.log(mod);
-					for (let y = 0; y < 100; y++) {
-						for (let x = 0; x < 100; x++) {
-							let cx = (x - 50) / 25;
-							let cy = (y - 50) / 25;
+					const image_data = ctx.createImageData(size, 1);
+					const data = image_data.data;
+					ctx.fillStyle = '#888';
+					ctx.fillRect(0, 0, size, size);
+					for (let y = 0; y < size; y++) {
+						for (let x = 0; x < size; x++) {
+							let cx = (x / size - 0.5) * zoom + center_x;
+							let cy = (y / size - 0.5) * zoom + center_y;
 							let value = mod.instance.exports.return_thing(cx, cy);
-							ctx.fillStyle = (value > 100) ? '#fff' : '#000';
-							ctx.fillRect(x, y, 1, 1);
+							if (value > 100) {
+								data[4*x] = 255;
+								data[4*x+1] = 255;
+								data[4*x+2] = 255;
+								data[4*x+3] = 255;
+							} else {
+								data[4*x] = value;
+								data[4*x+1] = value;
+								data[4*x+2] = value;
+								data[4*x+3] = 255;
+							}
 						}
-						await new Promise((resolve,reject) => setTimeout(resolve, 0));
+						ctx.putImageData(image_data, 0, y);
+						if (y % 16 === 0) {
+							await new Promise((resolve,reject) => setTimeout(resolve, 0));
+						}
 					}
 				};
 			}
@@ -36,7 +57,7 @@
 			<input type="button" id="run_button" value="Run">
 		</div>
 		<div>
-			<canvas id="canvas" width="100" height="100"></canvas>
+			<canvas id="canvas" width="400" height="400"></canvas>
 		</div>
 	</body>
 </html>
