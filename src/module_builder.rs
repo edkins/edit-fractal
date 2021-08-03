@@ -120,6 +120,12 @@ impl ModuleBuilder {
         }
         extend_leb128_usize(&mut self.current_func_code, n);
     }
+    fn emit_sleb128_u32(&mut self, n: u32) {
+        if !self.in_func {
+            panic!("cannot emit code outside of a func");
+        }
+        extend_sleb128_u32(&mut self.current_func_code, n);
+    }
     fn emit_blocktype(&mut self, blocktype: BlockType) {
         match blocktype {
             BlockType::Empty => self.emit(&[0x40])
@@ -176,6 +182,20 @@ impl ModuleBuilder {
     pub fn export_func(&mut self, f: Func, name: &str) {
         self.exports.push((name.to_owned(), 0x00, f.0));
     }
+
+    pub fn i32_const(&mut self, x: u32) {
+        self.emit(&[0x41]);
+        self.emit_sleb128_u32(x);
+    }
+
+    pub fn i32_add(&mut self) {
+        self.emit(&[0x6a]);
+    }
+
+    pub fn i32_lt_u(&mut self) {
+        self.emit(&[0x49]);
+    }
+
     /*pub fn f32_const(&mut self, x: f32) {
         self.emit(&[0x43]);
         self.emit(&x.to_le_bytes());
@@ -257,6 +277,10 @@ impl ModuleBuilder {
     pub fn end_block(&mut self) {
         self.emit(&[0x0b]);
     }
+    pub fn call(&mut self, f: Func) {
+        self.emit(&[0x10]);
+        self.emit_leb128_usize(f.0);
+    }
 }
 
 fn extend_leb128_usize(v: &mut Vec<u8>, mut n: usize) {
@@ -265,6 +289,17 @@ fn extend_leb128_usize(v: &mut Vec<u8>, mut n: usize) {
         n >>= 7;
     }
     v.push(n as u8);
+}
+
+fn extend_sleb128_u32(v: &mut Vec<u8>, mut n: u32) {
+    while n >= 0x40 && n < 0xffff_ffc0 {
+        v.push(128 | (n & 127) as u8);
+        n >>= 7;
+        if (n & 0x0100_0000) != 0 {
+            n |= 0xfe00_0000;
+        }
+    }
+    v.push((n & 0x7f) as u8);
 }
 
 fn leb_usize_len(mut n: usize) -> usize {
