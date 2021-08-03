@@ -74,6 +74,10 @@ impl Dag {
         self.f64_const(0.0)
     }
 
+    pub fn f64_one(&self) -> DagNode {
+        self.f64_const(1.0)
+    }
+
     pub fn f64_const(&self, x: f64) -> DagNode {
         DagNode::F64(x.to_bits())
     }

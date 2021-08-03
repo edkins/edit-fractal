@@ -16,6 +16,7 @@ pub fn backend(expr_initz: &Expr, expr: &Expr, expr_escape2: &Expr, maxiter: &Ex
     let l1 = mb.add_local(ValType::F64);
     let iter = mb.add_local(ValType::F64);
     let mut fc = FuncContext::new(mb);
+    fc.env.insert("i".to_owned(), Structure::Complex(fc.dag.f64_zero(), fc.dag.f64_one()));
     fc.env.insert("c".to_owned(), Structure::Complex(fc.dag.f64_input(cx), fc.dag.f64_input(cy)));
     let initz = fc.do_expr(expr_initz);
     let mut mb = fc.done(&[Effect(EffectType::Push, initz.cx()), Effect(EffectType::Push, initz.cy())]);
@@ -29,6 +30,7 @@ pub fn backend(expr_initz: &Expr, expr: &Expr, expr_escape2: &Expr, maxiter: &Ex
     mb.start_loop(BlockType::Empty);
 
     let mut fc = FuncContext::new(mb);
+    fc.env.insert("i".to_owned(), Structure::Complex(fc.dag.f64_zero(), fc.dag.f64_one()));
     fc.env.insert("c".to_owned(), Structure::Complex(fc.dag.f64_input(cx), fc.dag.f64_input(cy)));
     fc.env.insert("z".to_owned(), Structure::Complex(fc.dag.f64_input(l0), fc.dag.f64_input(l1)));
     fc.env.insert("iter".to_owned(), Structure::Complex(fc.dag.f64_input(iter), fc.dag.f64_zero()));
@@ -147,6 +149,11 @@ impl FuncContext {
                         let yrr = self.dag.f64_sub(bc, ad);
                         let x = self.dag.f64_div(xrr, rr);
                         let y = self.dag.f64_div(yrr, rr);
+                        Structure::Complex(x, y)
+                    }
+                    "neg" => {
+                        let x = self.dag.f64_neg(structs[0].cx());
+                        let y = self.dag.f64_neg(structs[0].cy());
                         Structure::Complex(x, y)
                     }
                     "sqabs" => {

@@ -57,6 +57,7 @@ fn expr_term(input: &str) -> IResult<&str, Expr, Err> {
 fn expr_tight(input: &str) -> IResult<&str, Expr, Err> {
     alt((
         delimited(symbol("("), expr, symbol(")")),
+        map(preceded(symbol("-"), expr), |e|Expr::Call("neg".to_owned(), vec![e])),
         map(preceded(keyword("sqabs"), delimited(symbol("("), expr, symbol(")"))), |e|Expr::Call("sqabs".to_owned(), vec![e])),
         map(preceded(keyword("real"), delimited(symbol("("), expr, symbol(")"))), |e|Expr::Call("real".to_owned(), vec![e])),
         map(preceded(keyword("conj"), delimited(symbol("("), expr, symbol(")"))), |e|Expr::Call("conj".to_owned(), vec![e])),
