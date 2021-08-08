@@ -246,7 +246,29 @@ impl FuncContext {
                         Structure::deriv(ad, z1, z2)
                     }
                     "/" => {
-                        panic!();
+                        let [a,b,c] = d[0].clone();
+                        let [d,e,f] = d[1].clone();
+                        let z0 = self.cx_div(&a, &d);
+
+                        let b_d = self.cx_div(&b, &d);
+                        let ae = self.cx_mul(&a, &e);
+                        let dd = self.cx_mul(&d, &d);
+                        let ae_dd = self.cx_div(&ae, &dd);
+                        let z1 = self.cx_sub(&b_d, &ae_dd);
+
+                        let c_d = self.cx_div(&c, &d);
+                        let af = self.cx_mul(&a, &f);
+                        let be = self.cx_mul(&a, &e);
+                        let be2 = self.cx_add(&be, &be);
+                        let af_plus_2be = self.cx_add(&af, &be2);
+                        let middle = self.cx_div(&af_plus_2be, &dd);
+                        let aee = self.cx_mul(&ae, &e);
+                        let aee2 = self.cx_add(&aee, &aee);
+                        let ddd = self.cx_mul(&dd, &d);
+                        let aee2_ddd = self.cx_div(&aee2, &ddd);
+                        let t = self.cx_sub(&c_d, &middle);
+                        let z2 = self.cx_add(&t, &aee2_ddd);
+                        Structure::deriv(z0, z1, z2)
                     }
                     "neg" => {
                         let z0 = self.cx_neg(&d[0][0]);

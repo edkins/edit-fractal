@@ -1,0 +1,18 @@
+z * z * z / (z + c)             -- nice but too grainy. False initial z choice at 0.
+z * z + c / z                   -- stable
+z * z + c / (z + i)             -- mostly stable but distorted
+z + (z + c) * (z + c) * z       -- stable
+z + (z + c) * (z + c) * (z - c) * (z - c)    -- stable, 6-way
+2 * z + (z + c) * (z + c) * z
+(z * z - 1) / (c * z + 1)
+(z - c/z) * (z-c/z)
+(z * z + c)/(z+1)               -- vertical
+z * z * z * z + z * z + c       -- distorted, start z=0
+z * z * z + z + c
+z * z + c - 0.03125/z           -- distorted, start z=0.5
+
+Non-mandelbrot initz choices
+z + (z + 0.1 * c) * (z - 0.1 * c)     -- start z=c
+z * z + c - 0.03125/z                 -- start z=c
+z * z + 0.02 / z +c                   -- start z=1
+
