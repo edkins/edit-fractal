@@ -1,0 +1,12 @@
+{
+  "name": "edit-fractal",
+  "version": "0.1.0",
+  "files": [
+    "edit_fractal_bg.wasm",
+    "edit_fractal.js",
+    "edit_fractal.d.ts"
+  ],
+  "module": "edit_fractal.js",
+  "types": "edit_fractal.d.ts",
+  "sideEffects": false
+}
