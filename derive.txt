@@ -1,0 +1,77 @@
+Original magnet formula: [(zz + c-1) / (2z + c-2)]^2
+
+Magic target formula: (z * z * z * z + c + 1) / (2 * z * z + c)
+Attempt: (z * z + c * c - c) / (c - z * z / c)
+Magic formula!!! (z * z + c) / (-1 - z * z)
+
+
+f(x) / g(x)
+
+
+
+( A f(x) ^ 2 + B f(x)g(x) + C g(x) ^ 2 )   / g(x)
+---------------------------
+( D f(x) + E g(x) )
+
+
+[A,B,C] / [D,E]
+
+
+[PD,PE+QD,QE] / [D,E] = [P,Q] = P f(x) + Q g(x)
+
+
+===============================================================
+
+Want h(h(z)) = (zzzz + c + 1) / (2zz + c)
+
+Let h(z) = [Azz + B] / [Dzz + E]
+Then h(h(z)) = [Ahh + B] / [Dhh + E]
+             = (A[Azz + B][Azz + B] + B[Dzz + E][Dzz + E]) / (D[Azz + B][Azz + B] + E[Dzz + E][Dzz + E])
+             = (AAAzzzz + 2AABzz + ABB + BDDzzzz + 2BDEzz + BEE) / (DAAzzzz + 2DABzz + DBB + EDDzzzz + 2EEDzz + EEE)
+             
+So,
+   D(AA + ED) = 0
+   B(AA + DE) = 0
+   D(AB + EE) = k
+   AAA + BDD = k
+   ABB + BEE = k(c + 1)
+   DBB + EEE = kc
+   
+where k != 0
+
+From AA+ED = 0:
+
+Suppose A=1
+D=-1/E
+
+So -1/E * (B + EE) = 1
+So B + EE = -E
+So B = EE - E = E(E - 1)
+
+h(z) = (zz + EE - E) / (E - zz/E)
+
+=================================================
+
+Simplify to:
+AA + ED = 0
+D(AB + EE) = AAA + BDD = (A-D)BB + (B-E)EE
+
+Suppose A=1
+E(B + EE) = EE + B = (EE-E)BB + (B-E)EEEE
+                   = EEBB - EBB + EEEEB - EEEEE
+                   = E(EBB - BB + EEEB - EEEE)
+
+k = -(AB + EE)/E = AAA + B/EE = (A+1/E)BB + (B-E)EE
+EEk = -E(B + EE) = EE + B = (EE+E)BB + (B-E)EEEE
+
+We have B+EE != 0.
+So E = -1.
+1 + B = (1 + B).   works!
+
+So:
+A = 1
+B = anything
+D = -1
+E = -1
+
+

@@ -14,6 +14,7 @@ z * z + c - 0.03125/z           -- distorted, start z=0.5
 z * z - c / (z + 1) - 1
 z * z * c + 1 / z / z
 z * z *z+ c*z*(z-1)
+(z * z + c) / (-1 - z * z)      -- start z=0
 
 Non-mandelbrot initz choices
 z + (z + 0.1 * c) * (z - 0.1 * c)     -- start z=c
