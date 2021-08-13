@@ -36,6 +36,11 @@
 				await run();
 			}
 
+			async function zoom_out() {
+				zoom *= 10;
+				await run();
+			}
+
 			async function toggle_big() {
 				if (size === 400) {
 					size = 2000;
@@ -99,6 +104,7 @@
 			async function setup() {
 				await init();
 				document.getElementById('reset_zoom_button').onclick = reset_zoom;
+				document.getElementById('zoom_out_button').onclick = zoom_out;
 				document.getElementById('run_button').onclick = run;
 				document.getElementById('big_button').onclick = toggle_big;
 				document.getElementById('canvas').onclick = canvas_click;
@@ -137,6 +143,7 @@
 		<div>
 			<input type="button" id="run_button" value="Run">
 			<input type="button" id="reset_zoom_button" value="Reset zoom">
+			<input type="button" id="zoom_out_button" value="Zoom out">
 			<input type="button" id="big_button" value="Big">
 		</div>
 		<div>
