@@ -109,7 +109,24 @@
 			<input type="text" id="initial_z" autocomplete="off" value=""> initial z
 		</div>
 		<div>
-			<input type="text" id="iteration" autocomplete="off" value="z * z + c"> iteration
+			<input type="text" id="iteration" autocomplete="off" value="z * z + c" list="iteration_gallery"> iteration
+			<datalist id="iteration_gallery">
+				<option value="z * z + c">
+				<option value="z * z * z + c">
+				<option value="z * z * z + z + c">
+				<option value="z * z * z + c * z * (z - 1)">
+				<option value="z * z + c / z">
+				<option value="z * z + c / (z + i)">
+				<option value="z * z - c / (z + 1) - 1">
+				<option value="z * z * c + 1 / (z * z)">
+				<option value="(z - c / z) * (z - c / z)">
+				<option value="(z * z + c) / (z + 1)">
+				<option value="(z * z - 1) / (c * z + 1)">
+				<option value="z + (z + c) * (z + c) * z">
+				<option value="2 * z + (z + c) * (z + c) * z">
+				<option value="z + (z + c) * (z + c) * (z - c) * (z - c)">
+				<option value="(z + c) * (z + c) * (z + c) / z">
+			</datalist>
 		</div>
 		<div>
 			<input type="text" id="escape" autocomplete="off" value="sqabs(z) > 4"> escape
